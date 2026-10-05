@@ -1,0 +1,29 @@
+# Phase 1 development stack for reSOURCE.
+# Only PostgreSQL runs in Docker; the Spring Boot backend and the Vite dev
+# server run on the host. Values come from the environment so no secrets are
+# committed: copy backend/.env.example to .env in this folder before starting.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: resource-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-resource_db}
+      POSTGRES_USER: ${POSTGRES_USER:-resource_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required. Copy backend/.env.example to .env first.}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-resource_user} -d ${POSTGRES_DB:-resource_db}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
